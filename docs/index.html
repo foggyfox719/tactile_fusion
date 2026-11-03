@@ -1,0 +1,202 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="在纯视觉 pi0.5 上引入视触觉图像，展示接触感知策略在抓取和放孔任务上的真机 Demo。">
+  <title>Seeing Touch · 视触觉 VLA Demo</title>
+  <link rel="stylesheet" href="./style.css">
+</head>
+<body>
+  <div class="page">
+    <header class="site-header">
+      <h1>Seeing Touch</h1>
+      <p class="subtitle">Tactile World Model for Contact-Rich Manipulation</p>
+      <p class="subtitle-zh">视触觉世界模型与接触感知策略</p>
+      <p class="repo-row">
+        <a class="repo-link" href="https://github.com/foggyfox719/tactile_fusion" target="_blank" rel="noopener">
+          GitHub · tactile_fusion <span>↗</span>
+        </a>
+      </p>
+      <nav class="link-row">
+        <a href="#overview">Overview</a>
+        <a href="#system">System</a>
+        <a href="#videos">Videos</a>
+        <a href="#results">Results</a>
+      </nav>
+    </header>
+
+    <main>
+      <section id="overview" class="section">
+        <h2>Overview</h2>
+        <p class="lead">
+          在纯视觉 pi0.5 的基础上，把夹爪指尖的视触觉图像加入策略输入。
+          以接触前后的图像差异为线索，比较不同触觉编码和处理方式，
+          并在 Piper 机械臂上验证抓取与放孔。
+        </p>
+        <div class="overview-grid">
+          <div>
+            <h3>纯视觉基线</h3>
+            <p>复刻 pi0.5 的抓桶流程，确认视觉策略、相机和机械臂链路正常。</p>
+          </div>
+          <div>
+            <h3>加入视触觉</h3>
+            <p>把两只指尖的触觉图作为额外输入，利用接触前后的差异判断夹爪与物体的接触状态。</p>
+          </div>
+          <div>
+            <h3>接触感知微调</h3>
+            <p>从原始触觉策略继续训练 encoder、action LoRA 和 action head，让触觉 token 参与动作生成。</p>
+          </div>
+        </div>
+      </section>
+
+      <section id="system" class="section">
+        <h2>System</h2>
+        <p class="lead">
+          策略保留 pi0.5 的视觉-语言主干，加入一个小的触觉分支。
+          触觉 token 作为 prefix 与图像、语言 token 一起进入 action expert。
+        </p>
+
+        <div class="pipeline">
+          <div class="pipe">
+            <span>Observation</span>
+            <b>side / wrist RGB</b>
+            <small>关节状态 · 语言指令</small>
+          </div>
+          <span class="plus">+</span>
+          <div class="pipe tactile">
+            <span>Visuo-tactile</span>
+            <b>2 指 × 3 帧</b>
+            <small>96 × 96 × 6：RGB + 接触差异</small>
+          </div>
+          <span class="arrow">→</span>
+          <div class="pipe">
+            <span>Tactile encoder</span>
+            <b>spatial CNN</b>
+            <small>时间 Conv1D · 4 tokens</small>
+          </div>
+          <span class="arrow">→</span>
+          <div class="pipe">
+            <span>Policy</span>
+            <b>pi0.5 action expert</b>
+            <small>关节 delta + 夹爪</small>
+          </div>
+        </div>
+
+        <div class="two-col">
+          <div>
+            <h3>6 通道触觉输入</h3>
+            <p>
+              当前 RGB 与无接触基准做差。前 3 通道保留外观，后 3 通道突出接触变化；
+              3 帧历史保留了接近、接触、挤压的过程。
+            </p>
+            <pre><code>frame = [current_rgb, current_rgb − reference_rgb]</code></pre>
+          </div>
+          <div>
+            <h3>触觉编码与微调</h3>
+            <p>
+              触觉 encoder 由空间卷积和时间卷积组成，输出 4 个 token。
+              微调时训练触觉 encoder、action LoRA 和 action head，语言与视觉主干保持冻结。
+            </p>
+          </div>
+        </div>
+
+        <div class="two-routes">
+          <div class="route">
+            <h3>AnyTouch2 adapter-only</h3>
+            <p>冻结预训练触觉特征，只训练轻量 adapter。参数少，但触觉对动作的影响有限。</p>
+          </div>
+          <div class="route route-active">
+            <h3>Tactile encoder + 接触感知微调</h3>
+            <p>从原始触觉策略初始化，训练触觉 encoder、action LoRA 和 action head。</p>
+          </div>
+        </div>
+      </section>
+
+      <section id="videos" class="section">
+        <h2>Videos</h2>
+        <p class="lead">
+          同一套 Piper + Xense 平台。抓桶用于验证 pi0.5 复现，
+          抓柱放孔用于比较纯视觉、早期触觉和 Tactile-FT。
+        </p>
+
+        <div class="video-grid">
+          <figure class="video-card">
+            <video playsinline preload="auto" poster="./media/pi05_bucket.jpg">
+              <source src="./media/pi05_bucket.mp4" type="video/mp4">
+            </video>
+            <figcaption>
+              <b>抓桶复刻 · 纯视觉 pi0.5</b>
+              <span>复刻 pi0.5 的抓桶/入碗流程。</span>
+            </figcaption>
+          </figure>
+
+          <figure class="video-card">
+            <video playsinline preload="auto" poster="./media/pi05_pure_peg.jpg">
+              <source src="./media/pi05_pure_peg.mp4" type="video/mp4">
+            </video>
+            <figcaption>
+              <b>抓柱放孔 · 纯视觉 pi0.5</b>
+              <span>没有触觉输入，最后几毫米主要靠视觉修正。</span>
+            </figcaption>
+          </figure>
+
+          <figure class="video-card">
+            <video playsinline preload="auto" poster="./media/tactile_attempt_a.jpg">
+              <source src="./media/tactile_attempt_a.mp4" type="video/mp4">
+            </video>
+            <figcaption>
+              <b>抓柱放孔 · 触觉早期版本</b>
+              <span>触觉开始影响动作，但放置稳定性仍有限。</span>
+            </figcaption>
+          </figure>
+
+          <figure class="video-card success">
+            <video playsinline preload="auto" poster="./media/tactile_success.jpg">
+              <source src="./media/tactile_success.mp4" type="video/mp4">
+            </video>
+            <figcaption>
+              <b>抓柱放孔 · Tactile-FT</b>
+              <span>接触感知微调后的真机片段。</span>
+            </figcaption>
+          </figure>
+        </div>
+      </section>
+
+      <section id="results" class="section">
+        <h2>Results</h2>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Setting</th>
+                <th>Tactile encoding</th>
+                <th>Real-robot observation</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>纯视觉 pi0.5</td>
+                <td>无</td>
+                <td>抓桶稳定；放孔主要依赖视觉</td>
+              </tr>
+              <tr>
+                <td>AnyTouch2 adapter-only</td>
+                <td>冻结触觉特征 + adapter</td>
+                <td>抓取不稳；放孔失败</td>
+              </tr>
+              <tr class="highlight-row">
+                <td>Tactile-FT</td>
+                <td>触觉 encoder + 接触感知微调</td>
+                <td>约 50% 初步成功率</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script src="./script.js"></script>
+</body>
+</html>

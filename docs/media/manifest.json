@@ -1,0 +1,30 @@
+[
+  {
+    "slug": "tactile_attempt_a",
+    "label": "触觉早期版本 / 抓柱放孔",
+    "duration": 30.72,
+    "source": "22ee5840cfed8f45998de8b2cced921a.mp4",
+    "poster_t": 20.0
+  },
+  {
+    "slug": "pi05_bucket",
+    "label": "纯视觉 pi0.5 / 抓桶复刻",
+    "duration": 26.35,
+    "source": "pi0.5.mp4",
+    "poster_t": 18.0
+  },
+  {
+    "slug": "pi05_pure_peg",
+    "label": "纯视觉 pi0.5 / 抓柱放孔",
+    "duration": 55.51,
+    "source": "纯pi0.5.mp4",
+    "poster_t": 44.0
+  },
+  {
+    "slug": "tactile_success",
+    "label": "Tactile-FT / 抓柱放孔成功",
+    "duration": 34.05,
+    "source": "触觉成功.mp4",
+    "poster_t": 24.0
+  }
+]

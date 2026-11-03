@@ -1,4 +1,4 @@
-# # Tactile Fusion
+# Tactile Fusion
 
 Tactile Fusion adds a visuo-tactile branch to an existing pi05 policy.  
 It is **not a fork of openpi** and does not include a pi05 checkout. The
@@ -190,3 +190,20 @@ expert base.
 This is a reference description. Dataset paths, checkpoints, normalization
 statistics, and hardware setup are environment-specific and are not part of
 this showcase repository.
+
+## Demo page
+
+The static project page is in `docs/`. To publish it with GitHub Pages:
+
+```text
+Settings -> Pages
+Source: Deploy from a branch
+Branch: main
+Folder: /docs
+```
+
+The expected URL is:
+
+```text
+https://foggyfox719.github.io/tactile_fusion/
+```
